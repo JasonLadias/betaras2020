@@ -6,6 +6,7 @@ import axios from 'axios'
 import savvas from '../Assets/savvas.jpg'
 import jason from '../Assets/jason.jpg'
 import byron from '../Assets/byron.jpg'
+import miltos from '../Assets/miltos.jpg'
 import { Histogram, DensitySeries, BarSeries, withParentSize, XAxis, YAxis } from '@data-ui/histogram';
 import BarGraph from './BarGraph'
 
@@ -33,15 +34,43 @@ const PersonalData = ({ name, url }) => {
   const theme = useTheme()
   const belowSmall = useMediaQuery(theme.breakpoints.down('sm'))
 
+  const [stats, setStats] = useState(null)
+  const [seriStats, setSeriStats] = useState([])
   const [bestLeague, setBestLeague] = useState(null)
   const [worstLeague, setWorstLeague] = useState(null)
   const [bestTeam, setBestTeam] = useState(null)
   const [worstTeam, setWorstTeam] = useState(null)
   const [statsPerWeek, setStatsPerWeek] = useState([])
-  const [image, setImage] = useState(savvas)
+  const [image, setImage] = useState(null)
+
+  useEffect(() => {
+    switch (url) {
+      case 'jason':
+        setImage(jason)
+        break
+      case 'savvas':
+        setImage(savvas)
+        break
+      case 'byron':
+        setImage(byron)
+        break
+      case 'miltos':
+        setImage(miltos)
+        break  
+      default:
+        break
+    }
+  }, [])
 
   useEffect(() => {
     let array
+    axios.get(`http://localhost:8080/${url}`)
+      .then((res) => {
+        setStats(res.data[0].percentage)
+      })
+      .catch((err) => {
+        console.log(err)
+      })
     axios.get(`http://localhost:8080/${url}/league`)
       .then((res) => {
         setWorstLeague(res.data[0])
@@ -64,6 +93,8 @@ const PersonalData = ({ name, url }) => {
       .then((res) => {
         let sumWon = 0
         let sumPlayed = 0
+        let seriWon = 0
+        let seriPlayed = 0
         res.data.forEach((res) =>{
           sumWon += res.won
           sumPlayed += res.played
@@ -72,11 +103,28 @@ const PersonalData = ({ name, url }) => {
             {
               id: res.id,
               date: res.date,
-              percentage: ((sumWon / sumPlayed)*100).toFixed(1)
+              overallPercentage: ((sumWon / sumPlayed)*100).toFixed(1),
+              percentage: ((res.won / res.played)*100).toFixed(1)
             }
           ]
         })
         setStatsPerWeek(array)
+        let cnt = 6
+        let newArray = []
+        while( cnt > 0) {
+          seriWon += res.data[res.data.length - cnt].won
+          seriPlayed += res.data[res.data.length - cnt].played
+          newArray = [
+            ...newArray,
+            {
+              id: res.data[res.data.length - cnt].id,
+              date: res.data[res.data.length - cnt].date,
+              overallPercentage: ((seriWon / seriPlayed)*100).toFixed(1)
+            }
+          ]
+          cnt--
+        }
+        setSeriStats(newArray)
       })
       .catch((err) => {
         console.log(err)
@@ -102,7 +150,7 @@ const PersonalData = ({ name, url }) => {
             />
             <CardContent>
               <Typography gutterBottom variant="h5" component="h2" align='center'>
-                {name}
+                {`${name} - ${stats ? Number(stats).toFixed(1) + '%': null}`} 
               </Typography>
               <Grid container direction='row' justify='space-between' className={classes.gridstats}>
                 <Grid item xs={12} sm={6} md={12}>
@@ -112,7 +160,7 @@ const PersonalData = ({ name, url }) => {
                 </Grid>
                 <Grid item xs={12} sm={6} md={12}>
                   <Typography gutterBottom variant="h6" align='left'  >
-                    {bestLeague ? `${bestLeague.league} => ${Number(bestLeague.percentage*100).toFixed(1)}%`: null} 
+                    {bestLeague ? `${bestLeague.league} => ${Number(bestLeague.percentage*100).toFixed(1)}% => ${bestLeague.won} / ${bestLeague.played}`: null} 
                   </Typography>
                 </Grid>
               </Grid>
@@ -124,7 +172,7 @@ const PersonalData = ({ name, url }) => {
                 </Grid>
                 <Grid item xs={12} sm={6} md={12}>
                   <Typography gutterBottom variant="h6" align='left'>
-                    {worstLeague ? `${worstLeague.league} => ${Number(worstLeague.percentage*100).toFixed(1)}%` : null}                
+                    {worstLeague ? `${worstLeague.league} => ${Number(worstLeague.percentage*100).toFixed(1)}% => ${worstLeague.won} / ${worstLeague.played}` : null}                
                   </Typography>
                 </Grid>
               </Grid>
@@ -136,7 +184,7 @@ const PersonalData = ({ name, url }) => {
                 </Grid>
                 <Grid item xs={12} sm={6} md={12}>
                   <Typography gutterBottom variant="h6" align='left'>
-                    {bestTeam ? `${bestTeam.team} => ${Number(bestTeam.percentage*100).toFixed(1)}%` : null }
+                    {bestTeam ? `${bestTeam.team} => ${Number(bestTeam.percentage*100).toFixed(1)}% => ${bestTeam.totalWins} / ${bestTeam.cnt}` : null }
                   </Typography>
                 </Grid>
               </Grid>
@@ -148,7 +196,7 @@ const PersonalData = ({ name, url }) => {
                 </Grid>
                 <Grid item xs={12} sm={6} md={12} >
                   <Typography gutterBottom variant="h6" align='left'>
-                    {worstTeam ? `${worstTeam.team} => ${Number(worstTeam.percentage*100).toFixed(1)}%`: null} 
+                    {worstTeam ? `${worstTeam.team} => ${Number(worstTeam.percentage*100).toFixed(1)}% => ${worstTeam.totalWins} / ${worstTeam.cnt}`: null} 
                   </Typography>
                 </Grid>
               </Grid>
@@ -158,7 +206,12 @@ const PersonalData = ({ name, url }) => {
         <Box width={belowSmall?'100%':'70%'}>
           <Grid container direction='row' justify='space-between'>
             <Grid item xl={12}>
-              <BarGraph stats={statsPerWeek}/>
+              <Box width='100%'><Typography variant='h6' align='center'>Αθροιστικά ποσοστά</Typography></Box>
+              <Box display='flex' flexDirection='column' alignItems='center' width='100%'><BarGraph stats={statsPerWeek}/></Box>
+            </Grid>
+            <Grid item xl={12}>
+              <Box width='100%'><Typography variant='h6' align='center'>Τελευταία ποσοστά</Typography></Box>
+              <Box display='flex' flexDirection='column' alignItems='center' width='100%'><BarGraph stats={seriStats}/></Box>
             </Grid>
             <Grid item xs={12} sm={12} md={6} lg={4}>
             

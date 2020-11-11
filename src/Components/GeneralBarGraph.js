@@ -1,11 +1,10 @@
-import React, { useState, useEffect} from 'react'
+import React, { useState, useEffect } from 'react'
 import { makeStyles, useTheme } from '@material-ui/core/styles'
 import useMediaQuery from '@material-ui/core/useMediaQuery'
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
 
- 
 const GeneralBarGraph = ({ stats }) => {
   const theme = useTheme()
   const aboveXL = useMediaQuery(theme.breakpoints.up('xl'))
@@ -33,27 +32,27 @@ const GeneralBarGraph = ({ stats }) => {
       setHeight(500)
       setWidth(1000)
     }
-  }, [aboveXL,belowXL,belowLarge, belowMedium, belowSmall])
+  }, [aboveXL, belowXL, belowLarge, belowMedium, belowSmall])
 
   return (
-      <AreaChart
-        data={stats}
-        height={height}
-        width={width}
-        margin={{
-          top: 5, right: 30, left: 20, bottom: 5,
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="id" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Area dataKey="percentageJason" fill="#ff0000" />
-        <Area dataKey="percentageSavvas" fill="#66ff66" />
-        <Area dataKey="percentageMiltos" fill="#8884d8" />
-        <Area dataKey="percentageByron" fill="#ffff00" />
-      </AreaChart>
+    <LineChart
+      data={stats}
+      height={height}
+      width={width}
+      margin={{
+        top: 5, right: 30, left: 20, bottom: 5
+      }}
+    >
+      <CartesianGrid strokeDasharray='3 3' />
+      <XAxis dataKey='id' />
+      <YAxis domain={[0, 100]} />
+      <Tooltip />
+      <Legend />
+      <Line type='monotone' dataKey='percentageJason' stroke='#ff0000' />
+      <Line type='monotone' dataKey='percentageSavvas' stroke='#66ff66' />
+      <Line type='monotone' dataKey='percentageMiltos' stroke='#8884d8' />
+      <Line type='monotone' dataKey='percentageByron' stroke='#000000' />
+    </LineChart>
   )
 }
 

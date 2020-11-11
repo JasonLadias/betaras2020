@@ -9,11 +9,11 @@ const App = () => {
     <BrowserRouter>
       <Header />
       <Switch>
-        <Route exact path='/' component={() => <GeneralData />}  />
-        <Route exact path='/jason' component={() => <PersonalData name='Jason' url='jason'/>}  />
+        <Route exact path='/' component={() => <GeneralData />} />
+        <Route exact path='/jason' component={() => <PersonalData name='Jason' url='jason' />} />
         <Route exact path='/savvas' component={() => <PersonalData name='Σάββας' url='savvas' />} />
         <Route exact path='/miltos' component={() => <PersonalData name='Μίλτος' url='miltos' />} />
-        <Route exact path='/byron' component={() => <PersonalData name='Βύρων' url='byron' />}  />
+        <Route exact path='/byron' component={() => <PersonalData name='Βύρων' url='byron' />} />
       </Switch>
     </BrowserRouter>
   )
